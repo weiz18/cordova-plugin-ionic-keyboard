@@ -19,19 +19,23 @@
 
 #import "CDVKeyboard.h"
 #import <Cordova/CDVAvailability.h>
+#import <Cordova/NSDictionary+CordovaPreferences.h>
 #import <objc/runtime.h>
+#import <WebKit/WebKit.h>
 
 #ifndef __CORDOVA_3_2_0
 #warning "The keyboard plugin is only supported in Cordova 3.2 or greater, it may not work properly in an older version. If you do use this plugin in an older version, make sure the HideKeyboardFormAccessoryBar and KeyboardShrinksView preference values are false."
 #endif
 
-@interface CDVKeyboard () <UIScrollViewDelegate>
+@interface CDVIonicKeyboard () <UIScrollViewDelegate>
 
 @property (nonatomic, readwrite, assign) BOOL keyboardIsVisible;
+@property (nonatomic, readwrite) BOOL keyboardResizes;
+@property (nonatomic, readwrite) CGRect frame;
 
 @end
 
-@implementation CDVKeyboard
+@implementation CDVIonicKeyboard
 
 - (id)settingForKey:(NSString*)key
 {
@@ -42,68 +46,121 @@
 
 - (void)pluginInitialize
 {
-    NSString* setting = nil;
+    NSLog(@"CDVKeyboard: pluginInitialize");
+    NSDictionary *settings = self.commandDelegate.settings;
 
-    setting = @"HideKeyboardFormAccessoryBar";
-    if ([self settingForKey:setting]) {
-        self.hideFormAccessoryBar = [(NSNumber*)[self settingForKey:setting] boolValue];
-    }
-
-    setting = @"KeyboardShrinksView";
-    if ([self settingForKey:setting]) {
-        self.shrinkView = [(NSNumber*)[self settingForKey:setting] boolValue];
-    }
-
-    setting = @"DisableScrollingWhenKeyboardShrinksView";
-    if ([self settingForKey:setting]) {
-        self.disableScrollingInShrinkView = [(NSNumber*)[self settingForKey:setting] boolValue];
-    }
+    self.keyboardResizes = [settings cordovaBoolSettingForKey:@"KeyboardResizes" defaultValue:YES];
+    self.hideFormAccessoryBar = [settings cordovaBoolSettingForKey:@"HideKeyboardFormAccessoryBar" defaultValue:YES];
 
     NSNotificationCenter* nc = [NSNotificationCenter defaultCenter];
-    __weak CDVKeyboard* weakSelf = self;
 
-    _keyboardShowObserver = [nc addObserverForName:UIKeyboardDidShowNotification
-                                            object:nil
-                                             queue:[NSOperationQueue mainQueue]
-                                        usingBlock:^(NSNotification* notification) {
-            [weakSelf.commandDelegate evalJs:@"Keyboard.fireOnShow();"];
-                                        }];
-    _keyboardHideObserver = [nc addObserverForName:UIKeyboardDidHideNotification
-                                            object:nil
-                                             queue:[NSOperationQueue mainQueue]
-                                        usingBlock:^(NSNotification* notification) {
-            [weakSelf.commandDelegate evalJs:@"Keyboard.fireOnHide();"];
-                                        }];
+    [nc addObserver:self selector:@selector(onKeyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+    [nc addObserver:self selector:@selector(onKeyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
+    [nc addObserver:self selector:@selector(onKeyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+    [nc addObserver:self selector:@selector(onKeyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
+    [nc addObserver:self selector:@selector(onKeyboardDidFrame:) name:UIKeyboardDidChangeFrameNotification object:nil];
 
-    _keyboardWillShowObserver = [nc addObserverForName:UIKeyboardWillShowNotification
-                                                object:nil
-                                                 queue:[NSOperationQueue mainQueue]
-                                            usingBlock:^(NSNotification* notification) {
-            [weakSelf.commandDelegate evalJs:@"Keyboard.fireOnShowing();"];
-            weakSelf.keyboardIsVisible = YES;
-                                            }];
-    _keyboardWillHideObserver = [nc addObserverForName:UIKeyboardWillHideNotification
-                                                object:nil
-                                                 queue:[NSOperationQueue mainQueue]
-                                            usingBlock:^(NSNotification* notification) {
-            [weakSelf.commandDelegate evalJs:@"Keyboard.fireOnHiding();"];
-            weakSelf.keyboardIsVisible = NO;
-                                            }];
-
-    _shrinkViewKeyboardWillChangeFrameObserver = [nc addObserverForName:UIKeyboardWillChangeFrameNotification
-                                                                 object:nil
-                                                                  queue:[NSOperationQueue mainQueue]
-                                                             usingBlock:^(NSNotification* notification) {
-                                                                 [weakSelf performSelector:@selector(shrinkViewKeyboardWillChangeFrame:) withObject:notification afterDelay:0];
-                                                                 CGRect screen = [[UIScreen mainScreen] bounds];
-                                                                 CGRect keyboard = ((NSValue*)notification.userInfo[@"UIKeyboardFrameEndUserInfoKey"]).CGRectValue;
-                                                                 CGRect intersection = CGRectIntersection(screen, keyboard);
-                                                                 CGFloat height = MIN(intersection.size.width, intersection.size.height);
-                                                                 [weakSelf.commandDelegate evalJs: [NSString stringWithFormat:@"cordova.fireWindowEvent('keyboardHeightWillChange', { 'keyboardHeight': %f })", height]];
-                                                             }];
-
-    self.webView.scrollView.delegate = self;
+    // Prevent WKWebView to resize window
+    BOOL isWK = [self.webView isKindOfClass:NSClassFromString(@"WKWebView")];
+    if (!isWK) {
+        NSLog(@"CDVKeyboard: WARNING!!: Keyboard plugin works better with WK");
+    }
+    BOOL isPre10_0_0 = ![self osVersion:10 minor:0 patch:0];
+    if (isWK && isPre10_0_0) {
+        [nc removeObserver:self.webView name:UIKeyboardWillHideNotification object:nil];
+        [nc removeObserver:self.webView name:UIKeyboardWillShowNotification object:nil];
+        [nc removeObserver:self.webView name:UIKeyboardWillChangeFrameNotification object:nil];
+        [nc removeObserver:self.webView name:UIKeyboardDidChangeFrameNotification object:nil];
+    }
 }
+
+- (BOOL)osVersion:(NSInteger)mayor minor:(NSInteger)minor patch:(NSInteger)patch
+{
+    return [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){
+        .majorVersion = mayor,
+        .minorVersion = minor,
+        .patchVersion = patch
+        }];
+}
+
+
+#pragma mark Keyboard events
+
+- (void) onKeyboardWillHide:(NSNotification *)sender
+{
+    NSLog(@"CDVKeyboard: onKeyboardWillHide");
+    [self setKeyboardHeight:0 delay:0.01];
+    [self.commandDelegate evalJs:@"Keyboard.fireOnHiding();"];
+}
+
+- (void) onKeyboardDidHide:(NSNotification *)sender
+{
+    NSLog(@"CDVKeyboard: onKeyboardDidHide");
+    [self.commandDelegate evalJs:@"Keyboard.fireOnHide();"];
+}
+
+- (void) onKeyboardDidShow:(NSNotification *)sender
+{
+    NSLog(@"CDVKeyboard: onKeyboardDidShow");
+    [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
+    [self.commandDelegate evalJs:@"Keyboard.fireOnShow();"];
+}
+
+- (void) onKeyboardWillShow:(NSNotification *)note
+{
+    NSLog(@"CDVKeyboard: onKeyboardWillShow");
+    CGRect rect = [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    double duration = [[note.userInfo valueForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    double height = rect.size.height;
+    [self setKeyboardHeight:height delay:duration/2.0];
+    [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
+    [self.commandDelegate evalJs:@"Keyboard.fireOnShowing();"];
+}
+
+- (void) onKeyboardDidFrame:(NSNotification *)note
+{
+//    CGRect rect = [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+//    double height = rect.size.height;
+//    NSLog(@"CDVKeyboard: onKeyboardDidFrame");
+//    [self setKeyboardHeight: height delay:0];
+//    [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
+//    [self.commandDelegate evalJs: [NSString stringWithFormat:@"Keyboard.fireOnFrameChange(%f);", height]];
+}
+
+- (void) setKeyboardHeight:(double)height delay:(NSTimeInterval)delay
+{
+    if(self.keyboardResizes) {
+        CGRect f = [[UIScreen mainScreen] bounds];
+        [self setWKFrame:CGRectMake(f.origin.x, f.origin.y, f.size.width, f.size.height - height) delay:delay];
+    }
+}
+
+- (void)setWKFrame:(CGRect) frame delay:(NSTimeInterval)delay
+{
+    if(CGRectEqualToRect(self.frame, frame)) {
+        return;
+    }
+
+    self.frame = frame;
+
+    __weak CDVIonicKeyboard* weakSelf = self;
+    SEL action = @selector(_updateFrame);
+    [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:action object:nil];
+    if (delay == 0) {
+        [self _updateFrame];
+    } else {
+        [weakSelf performSelector:action withObject:nil afterDelay:delay];
+    }
+}
+
+- (void)_updateFrame
+{
+    if(!CGRectEqualToRect(self.frame, self.webView.frame)) {
+        NSLog(@"CDVKeyboard: updating WK frame");
+        [self.webView setFrame:self.frame];
+    }
+}
+
 
 #pragma mark HideFormAccessoryBar
 
@@ -140,104 +197,8 @@ static IMP WKOriginalImp;
     _hideFormAccessoryBar = hideFormAccessoryBar;
 }
 
-#pragma mark KeyboardShrinksView
-
-- (void)setShrinkView:(BOOL)shrinkView
-{
-    // When the keyboard shows, WKWebView shrinks window.innerHeight. This isn't helpful when we are already shrinking the frame
-    // They removed this behavior is iOS 10, but for 8 and 9 we need to prevent the webview from listening on keyboard events
-    // Even if you later set shrinkView to false, the observers will not be added back
-    NSNotificationCenter* nc = [NSNotificationCenter defaultCenter];
-    if ([self.webView isKindOfClass:NSClassFromString(@"WKWebView")]
-        && ![[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){.majorVersion = 10, .minorVersion = 0, .patchVersion = 0 }]) {
-        [nc removeObserver:self.webView name:UIKeyboardWillHideNotification object:nil];
-        [nc removeObserver:self.webView name:UIKeyboardWillShowNotification object:nil];
-        [nc removeObserver:self.webView name:UIKeyboardWillChangeFrameNotification object:nil];
-        [nc removeObserver:self.webView name:UIKeyboardDidChangeFrameNotification object:nil];
-    }
-    _shrinkView = shrinkView;
-}
-
-- (void)shrinkViewKeyboardWillChangeFrame:(NSNotification*)notif
-{
-    // No-op on iOS 7.0.  It already resizes webview by default, and this plugin is causing layout issues
-    // with fixed position elements.  We possibly should attempt to implement shrinkview = false on iOS7.0.
-    // iOS 7.1+ behave the same way as iOS 6
-    if (NSFoundationVersionNumber < NSFoundationVersionNumber_iOS_7_1 && NSFoundationVersionNumber > NSFoundationVersionNumber_iOS_6_1) {
-        return;
-    }
-
-    // If the view is not visible, we should do nothing. E.g. if the inappbrowser is open.
-    if (!(self.viewController.isViewLoaded && self.viewController.view.window)) {
-        return;
-    }
-
-    self.webView.scrollView.scrollEnabled = YES;
-
-    CGRect screen = [[UIScreen mainScreen] bounds];
-    CGRect statusBar = [[UIApplication sharedApplication] statusBarFrame];
-    CGRect keyboard = ((NSValue*)notif.userInfo[@"UIKeyboardFrameEndUserInfoKey"]).CGRectValue;
-
-    // Work within the webview's coordinate system
-    keyboard = [self.webView convertRect:keyboard fromView:nil];
-    statusBar = [self.webView convertRect:statusBar fromView:nil];
-    screen = [self.webView convertRect:screen fromView:nil];
-
-    // if the webview is below the status bar, offset and shrink its frame
-    if ([self settingForKey:@"StatusBarOverlaysWebView"] != nil && ![[self settingForKey:@"StatusBarOverlaysWebView"] boolValue]) {
-        CGRect full, remainder;
-        CGRectDivide(screen, &remainder, &full, statusBar.size.height, CGRectMinYEdge);
-        screen = full;
-    }
-
-    // Get the intersection of the keyboard and screen and move the webview above it
-    // Note: we check for _shrinkView at this point instead of the beginning of the method to handle
-    // the case where the user disabled shrinkView while the keyboard is showing.
-    // The webview should always be able to return to full size
-    CGRect keyboardIntersection = CGRectIntersection(screen, keyboard);
-    if (CGRectContainsRect(screen, keyboardIntersection) && !CGRectIsEmpty(keyboardIntersection) && _shrinkView && self.keyboardIsVisible) {
-        screen.size.height -= keyboardIntersection.size.height;
-        self.webView.scrollView.scrollEnabled = !self.disableScrollingInShrinkView;
-    }
-
-    // A view's frame is in its superview's coordinate system so we need to convert again
-    self.webView.frame = [self.webView.superview convertRect:screen fromView:self.webView];
-}
-
-#pragma mark UIScrollViewDelegate
-
-- (void)scrollViewDidScroll:(UIScrollView*)scrollView
-{
-    if (_shrinkView && _keyboardIsVisible) {
-        CGFloat maxY = scrollView.contentSize.height - scrollView.bounds.size.height;
-        if (scrollView.bounds.origin.y > maxY) {
-            scrollView.bounds = CGRectMake(scrollView.bounds.origin.x, maxY,
-                                           scrollView.bounds.size.width, scrollView.bounds.size.height);
-        }
-    }
-}
 
 #pragma mark Plugin interface
-
-- (void)shrinkView:(CDVInvokedUrlCommand*)command
-{
-    id value = [command.arguments objectAtIndex:0];
-    if (!([value isKindOfClass:[NSNumber class]])) {
-        value = [NSNumber numberWithBool:NO];
-    }
-
-    self.shrinkView = [value boolValue];
-}
-
-- (void)disableScrollingInShrinkView:(CDVInvokedUrlCommand*)command
-{
-    id value = [command.arguments objectAtIndex:0];
-    if (!([value isKindOfClass:[NSNumber class]])) {
-        value = [NSNumber numberWithBool:NO];
-    }
-
-    self.disableScrollingInShrinkView = [value boolValue];
-}
 
 - (void)hideFormAccessoryBar:(CDVInvokedUrlCommand*)command
 {
@@ -258,14 +219,7 @@ static IMP WKOriginalImp;
 
 - (void)dealloc
 {
-    // since this is ARC, remove observers only
-    NSNotificationCenter* nc = [NSNotificationCenter defaultCenter];
-
-    [nc removeObserver:_keyboardShowObserver];
-    [nc removeObserver:_keyboardHideObserver];
-    [nc removeObserver:_keyboardWillShowObserver];
-    [nc removeObserver:_keyboardWillHideObserver];
-    [nc removeObserver:_shrinkViewKeyboardWillChangeFrameObserver];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 @end

@@ -17,8 +17,8 @@
     <!-- ios -->
     <platform name="ios">
         <config-file target="config.xml" parent="/*">
-            <feature name="Keyboard">
-                <param name="ios-package" value="CDVKeyboard" onload="true" />
+            <feature name="IonicKeyboard">
+                <param name="ios-package" value="CDVIonicKeyboard" onload="true" />
             </feature>
         </config-file>
 
