@@ -202,12 +202,17 @@ static IMP WKOriginalImp;
 
 - (void)hideFormAccessoryBar:(CDVInvokedUrlCommand*)command
 {
-    id value = [command.arguments objectAtIndex:0];
-    if (!([value isKindOfClass:[NSNumber class]])) {
-        value = [NSNumber numberWithBool:NO];
+    if (command.arguments.count > 0) {
+        id value = [command.arguments objectAtIndex:0];
+        if (!([value isKindOfClass:[NSNumber class]])) {
+            value = [NSNumber numberWithBool:NO];
+        }
+        
+        self.hideFormAccessoryBar = [value boolValue];
     }
-
-    self.hideFormAccessoryBar = [value boolValue];
+    
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:self.hideFormAccessoryBar]
+                                callbackId:command.callbackId];
 }
 
 - (void)hide:(CDVInvokedUrlCommand*)command

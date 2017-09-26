@@ -25,8 +25,12 @@ var argscheck = require('cordova/argscheck'),
 
 var Keyboard = function() {};
 
-Keyboard.hideFormAccessoryBar = function(hide) {
-    exec(null, null, "Keyboard", "hideFormAccessoryBar", [hide]);
+Keyboard.hideFormAccessoryBar = function(hide, success) {
+    if (hide !== null && hide !== undefined){
+        exec(success, null, "Keyboard", "hideFormAccessoryBar", [hide]);
+    } else {
+        exec(success, null, "Keyboard", "hideFormAccessoryBar", []);
+    }
 };
 
 Keyboard.fireOnShow = function() {
