@@ -37,7 +37,7 @@
 
 @implementation CDVIonicKeyboard
 
-- (id)settingForKey:(NSString*)key
+- (id)settingForKey:(NSString *)key
 {
     return [self.commandDelegate.settings objectForKey:[key lowercaseString]];
 }
@@ -77,14 +77,14 @@
 
 #pragma mark Keyboard events
 
-- (void) onKeyboardWillHide:(NSNotification *)sender
+- (void)onKeyboardWillHide:(NSNotification *)sender
 {
     NSLog(@"CDVKeyboard: onKeyboardWillHide");
     [self setKeyboardHeight:0 delay:0.01];
     [self.commandDelegate evalJs:@"Keyboard.fireOnHiding();"];
 }
 
-- (void) onKeyboardWillShow:(NSNotification *)note
+- (void)onKeyboardWillShow:(NSNotification *)note
 {
     NSLog(@"CDVKeyboard: onKeyboardWillShow");
     CGRect rect = [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
@@ -95,7 +95,7 @@
     [self.commandDelegate evalJs:@"Keyboard.fireOnShowing();"];
 }
 
-- (void) onKeyboardDidShow:(NSNotification *)sender
+- (void)onKeyboardDidShow:(NSNotification *)sender
 {
     NSLog(@"CDVKeyboard: onKeyboardDidShow");
     [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
@@ -103,20 +103,20 @@
 }
 
 
-- (void) onKeyboardDidHide:(NSNotification *)sender
+- (void)onKeyboardDidHide:(NSNotification *)sender
 {
     NSLog(@"CDVKeyboard: onKeyboardDidHide");
     [self.commandDelegate evalJs:@"Keyboard.fireOnHide();"];
 }
 
-- (void) onKeyboardDidFrame:(NSNotification *)note
+- (void)onKeyboardDidFrame:(NSNotification *)note
 {
     CGRect rect = [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
     double height = rect.size.height;
     [self.commandDelegate evalJs: [NSString stringWithFormat:@"Keyboard.fireOnFrameChange(%f);", height]];
 }
 
-- (void) setKeyboardHeight:(double)height delay:(NSTimeInterval)delay
+- (void)setKeyboardHeight:(double)height delay:(NSTimeInterval)delay
 {
     if(self.keyboardResizes) {
         CGRect f = [[UIScreen mainScreen] bounds];
@@ -124,7 +124,7 @@
     }
 }
 
-- (void)setWKFrame:(CGRect) frame delay:(NSTimeInterval)delay
+- (void)setWKFrame:(CGRect)frame delay:(NSTimeInterval)delay
 {
     if(CGRectEqualToRect(self.frame, frame)) {
         return;
@@ -189,7 +189,7 @@ static IMP WKOriginalImp;
 
 #pragma mark Plugin interface
 
-- (void)hideFormAccessoryBar:(CDVInvokedUrlCommand*)command
+- (void)hideFormAccessoryBar:(CDVInvokedUrlCommand *)command
 {
     if (command.arguments.count > 0) {
         id value = [command.arguments objectAtIndex:0];
@@ -204,7 +204,7 @@ static IMP WKOriginalImp;
                                 callbackId:command.callbackId];
 }
 
-- (void)hide:(CDVInvokedUrlCommand*)command
+- (void)hide:(CDVInvokedUrlCommand *)command
 {
     [self.webView endEditing:YES];
 }
