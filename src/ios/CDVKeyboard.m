@@ -80,7 +80,7 @@
 - (void) onKeyboardWillHide:(NSNotification *)sender
 {
     NSLog(@"CDVKeyboard: onKeyboardWillHide");
-    [self setKeyboardHeight:0 delay:0];
+    [self setKeyboardHeight:0 delay:0.01];
     [self.commandDelegate evalJs:@"Keyboard.fireOnHiding();"];
 }
 
@@ -196,10 +196,10 @@ static IMP WKOriginalImp;
         if (!([value isKindOfClass:[NSNumber class]])) {
             value = [NSNumber numberWithBool:NO];
         }
-        
+
         self.hideFormAccessoryBar = [value boolValue];
     }
-    
+
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:self.hideFormAccessoryBar]
                                 callbackId:command.callbackId];
 }
