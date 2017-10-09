@@ -1,16 +1,15 @@
 {
-  "name": "cordova-plugin-keyboard",
-  "version": "1.1.5",
-  "description": "Cordova Keyboard Plugin",
-  "cordova": {
-    "id": "cordova-plugin-keyboard",
-    "platforms": [
-      "ios"
-    ]
+  "name": "cordova-plugin-ionic-keyboard",
+  "version": "1.1.6",
+  "description": "Ionic Keyboard Plugin",
+  "scripts": {
+    "sync_plugin_xml": "sync-cordova-xml package.json plugin.xml --output=plugin.xml",
+    "version": "npm run sync_plugin_xml && git add plugin.xml",
+    "deploy": "np"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/cjpearson/cordova-plugin-keyboard.git"
+    "url": "https://github.com/ionic-team/cordova-plugin-ionic-keyboard.git"
   },
   "keywords": [
     "cordova",
@@ -19,16 +18,14 @@
     "cordova-ios",
     "cordova-android"
   ],
-  "engines": [
-    {
-      "name": "cordova",
-      "version": ">=3.2.0"
-    }
-  ],
   "author": "Apache Software Foundation",
   "license": "Apache 2.0",
   "bugs": {
-    "url": "https://github.com/cjpearson/cordova-plugin-keyboard/issues"
+    "url": "https://github.com/ionic-team/cordova-plugin-ionic-keyboard/issues"
   },
-  "homepage": "https://github.com/cjpearson/cordova-plugin-keyboard#readme"
+  "homepage": "https://github.com/ionic-team/cordova-plugin-ionic-keyboard#readme",
+  "devDependencies": {
+    "np": "^2.16.0",
+    "sync-cordova-xml": "^0.4.0"
+  }
 }

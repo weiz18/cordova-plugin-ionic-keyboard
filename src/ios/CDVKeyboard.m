@@ -65,7 +65,7 @@
     if (!isWK) {
         NSLog(@"CDVKeyboard: WARNING!!: Keyboard plugin works better with WK");
     }
-    BOOL isPre10_0_0 = ![self osVersion:10 minor:0 patch:0];
+    BOOL isPre10_0_0 = !IsAtLeastiOSVersion(@"10.0");
     if (isWK && isPre10_0_0) {
         [nc removeObserver:self.webView name:UIKeyboardWillHideNotification object:nil];
         [nc removeObserver:self.webView name:UIKeyboardWillShowNotification object:nil];
@@ -74,36 +74,14 @@
     }
 }
 
-- (BOOL)osVersion:(NSInteger)mayor minor:(NSInteger)minor patch:(NSInteger)patch
-{
-    return [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){
-        .majorVersion = mayor,
-        .minorVersion = minor,
-        .patchVersion = patch
-        }];
-}
-
 
 #pragma mark Keyboard events
 
 - (void) onKeyboardWillHide:(NSNotification *)sender
 {
     NSLog(@"CDVKeyboard: onKeyboardWillHide");
-    [self setKeyboardHeight:0 delay:0.01];
+    [self setKeyboardHeight:0 delay:0];
     [self.commandDelegate evalJs:@"Keyboard.fireOnHiding();"];
-}
-
-- (void) onKeyboardDidHide:(NSNotification *)sender
-{
-    NSLog(@"CDVKeyboard: onKeyboardDidHide");
-    [self.commandDelegate evalJs:@"Keyboard.fireOnHide();"];
-}
-
-- (void) onKeyboardDidShow:(NSNotification *)sender
-{
-    NSLog(@"CDVKeyboard: onKeyboardDidShow");
-    [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
-    [self.commandDelegate evalJs:@"Keyboard.fireOnShow();"];
 }
 
 - (void) onKeyboardWillShow:(NSNotification *)note
@@ -117,14 +95,25 @@
     [self.commandDelegate evalJs:@"Keyboard.fireOnShowing();"];
 }
 
+- (void) onKeyboardDidShow:(NSNotification *)sender
+{
+    NSLog(@"CDVKeyboard: onKeyboardDidShow");
+    [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
+    [self.commandDelegate evalJs:@"Keyboard.fireOnShow();"];
+}
+
+
+- (void) onKeyboardDidHide:(NSNotification *)sender
+{
+    NSLog(@"CDVKeyboard: onKeyboardDidHide");
+    [self.commandDelegate evalJs:@"Keyboard.fireOnHide();"];
+}
+
 - (void) onKeyboardDidFrame:(NSNotification *)note
 {
-//    CGRect rect = [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-//    double height = rect.size.height;
-//    NSLog(@"CDVKeyboard: onKeyboardDidFrame");
-//    [self setKeyboardHeight: height delay:0];
-//    [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
-//    [self.commandDelegate evalJs: [NSString stringWithFormat:@"Keyboard.fireOnFrameChange(%f);", height]];
+    CGRect rect = [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    double height = rect.size.height;
+    [self.commandDelegate evalJs: [NSString stringWithFormat:@"Keyboard.fireOnFrameChange(%f);", height]];
 }
 
 - (void) setKeyboardHeight:(double)height delay:(NSTimeInterval)delay
