@@ -17,7 +17,7 @@
  under the License.
  */
 
-#import "CDVKeyboard.h"
+#import "CDVIonicKeyboard.h"
 #import <Cordova/CDVAvailability.h>
 #import <Cordova/NSDictionary+CordovaPreferences.h>
 #import <objc/runtime.h>

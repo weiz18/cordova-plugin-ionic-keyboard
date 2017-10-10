@@ -25,8 +25,8 @@
             </feature>
         </config-file>
 
-        <header-file src="src/ios/CDVKeyboard.h"/>
-        <source-file src="src/ios/CDVKeyboard.m"/>
+        <header-file src="src/ios/CDVIonicKeyboard.h"/>
+        <source-file src="src/ios/CDVIonicKeyboard.m"/>
     </platform>
 
     <!-- android -->
