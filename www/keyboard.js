@@ -25,14 +25,6 @@ var argscheck = require('cordova/argscheck'),
 
 var Keyboard = function() {};
 
-Keyboard.hideFormAccessoryBar = function(hide, success) {
-    if (hide !== null && hide !== undefined){
-        exec(success, null, "Keyboard", "hideFormAccessoryBar", [hide]);
-    } else {
-        exec(success, null, "Keyboard", "hideFormAccessoryBar", []);
-    }
-};
-
 Keyboard.fireOnShow = function() {
     Keyboard.isVisible = true;
     cordova.fireWindowEvent('keyboardDidShow');
@@ -55,12 +47,24 @@ Keyboard.fireOnFrameChange = function(height) {
     cordova.fireWindowEvent('keyboardHeightWillChange', { 'keyboardHeight': height });
 };
 
-Keyboard.show = function() {
+Keyboard.hideFormAccessoryBar = function(hide, success) {
+    if (hide !== null && hide !== undefined){
+        exec(success, null, "Keyboard", "hideFormAccessoryBar", [hide]);
+    } else {
+        exec(success, null, "Keyboard", "hideFormAccessoryBar", []);
+    }
+};
+
+Keyboard.show = function () {
     exec(null, null, "Keyboard", "show", []);
 };
 
 Keyboard.hide = function() {
     exec(null, null, "Keyboard", "hide", []);
+};
+
+Keyboard.disableScroll = function (disable) {
+    console.warn("Keyboard.disableScroll() was removed");
 };
 
 Keyboard.isVisible = false;

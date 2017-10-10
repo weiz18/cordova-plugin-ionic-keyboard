@@ -214,6 +214,13 @@ static IMP WKOriginalImp;
     [self.webView endEditing:YES];
 }
 
+- (void)show:(CDVInvokedUrlCommand *)command
+{
+    NSLog(@"Showing keyboard not supported in iOS due to platform limitations.");
+    NSLog(@"Instead, use input.focus(), and ensure that you have the following setting in your config.xml:");
+    NSLog(@"    <preference name='KeyboardDisplayRequiresUserAction' value='false'/>");
+}
+
 #pragma mark dealloc
 
 - (void)dealloc
