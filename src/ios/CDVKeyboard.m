@@ -21,7 +21,6 @@
 #import <Cordova/CDVAvailability.h>
 #import <Cordova/NSDictionary+CordovaPreferences.h>
 #import <objc/runtime.h>
-#import <WebKit/WebKit.h>
 
 #ifndef __CORDOVA_3_2_0
 #warning "The keyboard plugin is only supported in Cordova 3.2 or greater, it may not work properly in an older version. If you do use this plugin in an older version, make sure the HideKeyboardFormAccessoryBar and KeyboardShrinksView preference values are false."
@@ -31,6 +30,7 @@
 
 @property (nonatomic, readwrite, assign) BOOL keyboardIsVisible;
 @property (nonatomic, readwrite) BOOL keyboardResizes;
+@property (nonatomic, readwrite) BOOL isWK;
 @property (nonatomic, readwrite) CGRect frame;
 
 @end
@@ -61,7 +61,7 @@
     [nc addObserver:self selector:@selector(onKeyboardDidFrame:) name:UIKeyboardDidChangeFrameNotification object:nil];
 
     // Prevent WKWebView to resize window
-    BOOL isWK = [self.webView isKindOfClass:NSClassFromString(@"WKWebView")];
+    BOOL isWK = self.isWK = [self.webView isKindOfClass:NSClassFromString(@"WKWebView")];
     if (!isWK) {
         NSLog(@"CDVKeyboard: WARNING!!: Keyboard plugin works better with WK");
     }
@@ -80,28 +80,33 @@
 - (void)onKeyboardWillHide:(NSNotification *)sender
 {
     NSLog(@"CDVKeyboard: onKeyboardWillHide");
-    [self setKeyboardHeight:0 delay:0.01];
+    if (self.isWK) {
+        [self setKeyboardHeight:0 delay:0.01];
+    }
     [self.commandDelegate evalJs:@"Keyboard.fireOnHiding();"];
 }
 
 - (void)onKeyboardWillShow:(NSNotification *)note
 {
     NSLog(@"CDVKeyboard: onKeyboardWillShow");
-    CGRect rect = [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-    double duration = [[note.userInfo valueForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
-    double height = rect.size.height;
-    [self setKeyboardHeight:height delay:duration/2.0];
-    [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
+    if (self.isWK) {
+        CGRect rect = [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+        double duration = [[note.userInfo valueForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+        double height = rect.size.height;
+        [self setKeyboardHeight:height delay:duration/2.0];
+        [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
+    }
     [self.commandDelegate evalJs:@"Keyboard.fireOnShowing();"];
 }
 
 - (void)onKeyboardDidShow:(NSNotification *)sender
 {
     NSLog(@"CDVKeyboard: onKeyboardDidShow");
-    [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
+    if (self.isWK) {
+        [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
+    }
     [self.commandDelegate evalJs:@"Keyboard.fireOnShow();"];
 }
-
 
 - (void)onKeyboardDidHide:(NSNotification *)sender
 {
