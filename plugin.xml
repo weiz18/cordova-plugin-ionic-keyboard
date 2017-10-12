@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:rim="http://www.blackberry.com/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-plugin-ionic-wkkeyboard" version="1.1.11">
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:rim="http://www.blackberry.com/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-plugin-ionic-wkkeyboard" version="1.1.12">
     <name>cordova-plugin-ionic-wkkeyboard</name>
     <description>Ionic Keyboard Plugin</description>
     <license>Apache 2.0</license>
@@ -33,7 +33,7 @@
     <!-- android -->
     <platform name="android">
         <js-module src="www/android/keyboard.js" name="keyboard">
-            <clobbers target="window.Keyboard" />
+            <clobbers target="window.Keyboard"/>
         </js-module>
         <config-file target="config.xml" parent="/*">
             <feature name="Keyboard">
@@ -41,7 +41,7 @@
             </feature>
         </config-file>
 
-        <source-file src="src/android/IonicKeyboard.java" target-dir="src/io/ionic/keyboard" />
+        <source-file src="src/android/IonicKeyboard.java" target-dir="src/io/ionic/keyboard"/>
     </platform>
 
 </plugin>
