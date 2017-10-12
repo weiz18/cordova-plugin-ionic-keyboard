@@ -17,50 +17,52 @@
  * specific language governing permissions and limitations
  * under the License.
  *
-*/
+ */
 
 var argscheck = require('cordova/argscheck'),
     utils = require('cordova/utils'),
     exec = require('cordova/exec');
 
-var Keyboard = function() {};
+var Keyboard = function () {};
 
-Keyboard.fireOnShow = function() {
+Keyboard.fireOnShow = function (height) {
     Keyboard.isVisible = true;
-    cordova.fireWindowEvent('keyboardDidShow');
+    cordova.fireWindowEvent('keyboardDidShow', {
+        'keyboardHeight': height
+    });
 };
 
-Keyboard.fireOnHide = function() {
+Keyboard.fireOnHide = function () {
     Keyboard.isVisible = false;
     cordova.fireWindowEvent('keyboardDidHide');
 };
 
-Keyboard.fireOnHiding = function() {
+Keyboard.fireOnHiding = function () {
     cordova.fireWindowEvent('keyboardWillHide');
 };
 
-Keyboard.fireOnShowing = function() {
-    cordova.fireWindowEvent('keyboardWillShow');
+Keyboard.fireOnShowing = function (height) {
+    cordova.fireWindowEvent('keyboardWillShow', {
+        'keyboardHeight': height
+    });
 };
 
-Keyboard.fireOnFrameChange = function(height) {
-    cordova.fireWindowEvent('keyboardHeightWillChange', { 'keyboardHeight': height });
-};
-
-Keyboard.hideFormAccessoryBar = function(hide, success) {
-    if (hide !== null && hide !== undefined){
+Keyboard.hideFormAccessoryBar = function (hide, success) {
+    if (hide !== null && hide !== undefined) {
         exec(success, null, "Keyboard", "hideFormAccessoryBar", [hide]);
     } else {
         exec(success, null, "Keyboard", "hideFormAccessoryBar", []);
     }
 };
 
-Keyboard.show = function () {
-    exec(null, null, "Keyboard", "show", []);
+Keyboard.hide = function () {
+    exec(null, null, "Keyboard", "hide", []);
 };
 
-Keyboard.hide = function() {
-    exec(null, null, "Keyboard", "hide", []);
+Keyboard.show = function () {
+    console.warn('Showing keyboard not supported in iOS due to platform limitations.');
+    console.warn('Instead, use input.focus(), and ensure that you have the following setting in your config.xml: \n');
+    console.warn('    <preference name="KeyboardDisplayRequiresUserAction" value="false"/>\n');
 };
 
 Keyboard.disableScroll = function (disable) {
@@ -68,6 +70,5 @@ Keyboard.disableScroll = function (disable) {
 };
 
 Keyboard.isVisible = false;
-Keyboard.automaticScrollToTopOnHiding = false;
 
 module.exports = Keyboard;
