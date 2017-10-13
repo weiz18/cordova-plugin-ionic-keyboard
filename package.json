@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-ionic-wkkeyboard",
-  "version": "1.1.13",
+  "version": "1.1.14",
   "description": "Ionic Keyboard Plugin",
   "scripts": {
     "sync_plugin_xml": "sync-cordova-xml package.json plugin.xml --output=plugin.xml",
