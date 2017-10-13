@@ -31,7 +31,7 @@
 @property (nonatomic, readwrite, assign) BOOL keyboardIsVisible;
 @property (nonatomic, readwrite) BOOL keyboardResizes;
 @property (nonatomic, readwrite) BOOL isWK;
-@property (nonatomic, readwrite) CGRect frame;
+@property (nonatomic, readwrite) int paddingBottom;
 
 @end
 
@@ -129,21 +129,20 @@
     [self resetScrollView];
 }
 
-- (void)setKeyboardHeight:(double)height delay:(NSTimeInterval)delay
+- (void)setKeyboardHeight:(int)height delay:(NSTimeInterval)delay
 {
     if(self.keyboardResizes) {
-        CGRect f = [[UIScreen mainScreen] bounds];
-        [self setWKFrame:CGRectMake(f.origin.x, f.origin.y, f.size.width, f.size.height - height) delay:delay];
+        [self setPaddingBottom: height delay:delay];
     }
 }
 
-- (void)setWKFrame:(CGRect)frame delay:(NSTimeInterval)delay
+- (void)setPaddingBottom:(int)paddingBottom delay:(NSTimeInterval)delay
 {
-    if(CGRectEqualToRect(self.frame, frame)) {
+    if(self.paddingBottom == paddingBottom) {
         return;
     }
 
-    self.frame = frame;
+    self.paddingBottom = paddingBottom;
 
     __weak CDVIonicKeyboard* weakSelf = self;
     SEL action = @selector(_updateFrame);
@@ -157,11 +156,17 @@
 
 - (void)_updateFrame
 {
-    if(!CGRectEqualToRect(self.frame, self.webView.frame)) {
-        NSLog(@"CDVKeyboard: updating WK frame");
-        [self.webView setFrame:self.frame];
-        [self resetScrollView];
+    NSString *resize;
+    if(self.paddingBottom == 0) {
+        resize = @"document.body.style.height=null;";
+    }else{
+        CGRect f = [[UIScreen mainScreen] bounds];
+        int height = f.size.height - self.paddingBottom;
+        resize = [NSString stringWithFormat:@"document.body.style.height=\"%dpx\"", (int)height];
     }
+    NSLog(@"CDVKeyboard: updating WK frame");
+    [self.commandDelegate evalJs:resize];
+    [self resetScrollView];
 }
 
 
