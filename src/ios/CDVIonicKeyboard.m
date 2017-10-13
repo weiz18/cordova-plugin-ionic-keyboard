@@ -64,8 +64,8 @@
     if (!isWK) {
         NSLog(@"CDVKeyboard: WARNING!!: Keyboard plugin works better with WK");
     }
-    BOOL isPre10_0_0 = !IsAtLeastiOSVersion(@"10.0");
-    if (isWK && isPre10_0_0) {
+
+    if (isWK) {
         [nc removeObserver:self.webView name:UIKeyboardWillHideNotification object:nil];
         [nc removeObserver:self.webView name:UIKeyboardWillShowNotification object:nil];
         [nc removeObserver:self.webView name:UIKeyboardWillChangeFrameNotification object:nil];
@@ -76,11 +76,18 @@
 
 #pragma mark Keyboard events
 
+- (void)resetScrollView
+{
+    UIScrollView *scrollView = [self.webView scrollView];
+    [scrollView setContentInset:UIEdgeInsetsZero];
+}
+
 - (void)onKeyboardWillHide:(NSNotification *)sender
 {
     NSLog(@"CDVKeyboard: onKeyboardWillHide");
     if (self.isWK) {
         [self setKeyboardHeight:0 delay:0.01];
+        [self resetScrollView];
     }
     [self.commandDelegate evalJs:@"Keyboard.fireOnHiding();"];
 }
@@ -94,7 +101,7 @@
     if (self.isWK) {
         double duration = [[note.userInfo valueForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
         [self setKeyboardHeight:height delay:duration/2.0];
-        [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
+        [self resetScrollView];
     }
 
     NSString *js = [NSString stringWithFormat:@"Keyboard.fireOnShowing(%d);", (int)height];
@@ -108,7 +115,7 @@
     double height = rect.size.height;
 
     if (self.isWK) {
-        [[self.webView scrollView] setContentInset:UIEdgeInsetsZero];
+        [self resetScrollView];
     }
 
     NSString *js = [NSString stringWithFormat:@"Keyboard.fireOnShow(%d);", (int)height];
@@ -119,6 +126,7 @@
 {
     NSLog(@"CDVKeyboard: onKeyboardDidHide");
     [self.commandDelegate evalJs:@"Keyboard.fireOnHide();"];
+    [self resetScrollView];
 }
 
 - (void)setKeyboardHeight:(double)height delay:(NSTimeInterval)delay
@@ -152,6 +160,7 @@
     if(!CGRectEqualToRect(self.frame, self.webView.frame)) {
         NSLog(@"CDVKeyboard: updating WK frame");
         [self.webView setFrame:self.frame];
+        [self resetScrollView];
     }
 }
 
