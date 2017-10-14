@@ -22,6 +22,13 @@
 #import <Cordova/NSDictionary+CordovaPreferences.h>
 #import <objc/runtime.h>
 
+typedef enum : NSUInteger {
+    ResizeNone,
+    ResizeNative,
+    ResizeBody,
+    ResizeIonic,
+} ResizePolicy;
+
 #ifndef __CORDOVA_3_2_0
 #warning "The keyboard plugin is only supported in Cordova 3.2 or greater, it may not work properly in an older version. If you do use this plugin in an older version, make sure the HideKeyboardFormAccessoryBar and KeyboardShrinksView preference values are false."
 #endif
@@ -29,7 +36,7 @@
 @interface CDVIonicKeyboard () <UIScrollViewDelegate>
 
 @property (nonatomic, readwrite, assign) BOOL keyboardIsVisible;
-@property (nonatomic, readwrite) BOOL keyboardResizes;
+@property (nonatomic, readwrite) ResizePolicy keyboardResizes;
 @property (nonatomic, readwrite) BOOL isWK;
 @property (nonatomic, readwrite) int paddingBottom;
 
@@ -49,10 +56,23 @@
     NSLog(@"CDVKeyboard: pluginInitialize");
     NSDictionary *settings = self.commandDelegate.settings;
 
-    self.keyboardResizes = [settings cordovaBoolSettingForKey:@"KeyboardResizes" defaultValue:YES];
+    self.keyboardResizes = ResizeIonic;
+    BOOL doesResize = [settings cordovaBoolSettingForKey:@"KeyboardResizes" defaultValue:YES];
+    if (!doesResize) {
+        self.keyboardResizes = ResizeNone;
+    } else {
+        NSString *resizeMode = [settings cordovaSettingForKey:@"KeyboardResizesMode"];
+        if (resizeMode) {
+            if ([resizeMode isEqualToString:@"native"]) {
+                self.keyboardResizes = ResizeNative;
+            } else if ([resizeMode isEqualToString:@"body"]) {
+                self.keyboardResizes = ResizeBody;
+            }
+        }
+    }
     self.hideFormAccessoryBar = [settings cordovaBoolSettingForKey:@"HideKeyboardFormAccessoryBar" defaultValue:YES];
 
-    NSNotificationCenter* nc = [NSNotificationCenter defaultCenter];
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 
     [nc addObserver:self selector:@selector(onKeyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
     [nc addObserver:self selector:@selector(onKeyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
@@ -131,14 +151,14 @@
 
 - (void)setKeyboardHeight:(int)height delay:(NSTimeInterval)delay
 {
-    if(self.keyboardResizes) {
+    if (self.keyboardResizes != ResizeNone) {
         [self setPaddingBottom: height delay:delay];
     }
 }
 
 - (void)setPaddingBottom:(int)paddingBottom delay:(NSTimeInterval)delay
 {
-    if(self.paddingBottom == paddingBottom) {
+    if (self.paddingBottom == paddingBottom) {
         return;
     }
 
@@ -156,16 +176,31 @@
 
 - (void)_updateFrame
 {
-    NSString *resize;
-    if(self.paddingBottom == 0) {
-        resize = @"document.body.style.height=null;";
-    }else{
-        CGRect f = [[UIScreen mainScreen] bounds];
-        int height = f.size.height - self.paddingBottom;
-        resize = [NSString stringWithFormat:@"document.body.style.height=\"%dpx\"", (int)height];
-    }
     NSLog(@"CDVKeyboard: updating WK frame");
-    [self.commandDelegate evalJs:resize];
+    CGRect f = [[UIScreen mainScreen] bounds];
+    switch (self.keyboardResizes) {
+        case ResizeBody:
+        {
+            NSString *js = [NSString stringWithFormat:@"Keyboard.fireOnResize(%d, %d, document.body);",
+                            (int)self.paddingBottom, (int)f.size.height];
+            [self.commandDelegate evalJs:js];
+            break;
+        }
+        case ResizeIonic:
+        {
+            NSString *js = [NSString stringWithFormat:@"Keyboard.fireOnResize(%d, %d, document.querySelector('ion-app'));",
+                            (int)self.paddingBottom, (int)f.size.height];
+            [self.commandDelegate evalJs:js];
+            break;
+        }
+        case ResizeNative:
+        {
+            [self.webView setFrame:CGRectMake(f.origin.x, f.origin.y, f.size.width, f.size.height - self.paddingBottom)];
+            break;
+        }
+        default:
+            break;
+    }
     [self resetScrollView];
 }
 
