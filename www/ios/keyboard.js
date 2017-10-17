@@ -51,7 +51,7 @@ Keyboard.fireOnResize = function (height, screenHeight, ele) {
     if (!ele) {
         return;
     }
-    if (height == 0) {
+    if (height === 0) {
         ele.style.height = null;
     } else {
         ele.style.height = (screenHeight - height) + 'px';

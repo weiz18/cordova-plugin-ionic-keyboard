@@ -70,23 +70,12 @@ Call this method to hide the keyboard
 Keyboard.hide();
 ```
 
-##### Quick Example
-
-```js
-Keyboard.hide();
-```
 
 ### Keyboard.show
 
 > Show the keyboard
 
 Call this method to show the keyboard.
-
-```js
-Keyboard.show();
-```
-
-##### Quick Example
 
 ```js
 Keyboard.show();
