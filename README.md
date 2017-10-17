@@ -1,292 +1,159 @@
-# cordova-plugin-keyboard
+# cordova-plugin-ionic-keyboard
 
-> This plugin provides the `Keyboard` object which has some functions to customize and control the keyboard. It also supports the __HideKeyboardFormAccessoryBar__ (boolean) and __KeyboardShrinksView__ (boolean) preferences in config.xml.
+This plugin has been designed to work seamlessly with `cordova-plugin-ionic-webview`, so make sure you have it installed first:
 
-This plugin has only been tested in Cordova 3.2 or greater, and its use in previous Cordova versions is not recommended (potential conflict with keyboard customization code present in the core in previous Cordova versions). 
+ - https://github.com/ionic-team/cordova-plugin-ionic-webview
+ - https://ionicframework.com/docs/wkwebview/
 
-If you do use this plugin in an older Cordova version (again, not recommended), you have to make sure the HideKeyboardFormAccessoryBar and KeyboardShrinksView preference values are *always* false, and only use the API functions to turn things on/off.
+## Installation
 
-This plugin was based on this Apache [project](https://github.com/apache/cordova-plugins/tree/master/keyboard) and has a compatible API.
+```
+cordova plugin add cordova-plugin-ionic-keyboard --save
+```
 
-- [Installation](#installation)
-- [Methods](#methods)
-    - [Keyboard.shrinkView](#keyboardshrinkview)
-    - [Keyboard.hideFormAccessoryBar](#keyboardhideformaccessorybar)
-    - [Keyboard.disableScrollingInShrinkView](#keyboarddisablescrollinginshrinkview)
-    - [Keyboard.hide](#keyboardhide)
-    - [Keyboard.show](#keyboardshow)
-- [Properties](#properties)
-    - [Keyboard.isVisible](#keyboardisvisible)
-    - [Keyboard.automaticScrollToTopOnHiding](#keyboardautomaticscrolltotoponhiding)
-- [Events](#events)
-    - [keyboardDidShow](#keyboarddidshow)
-    - [keyboardDidHide](#keyboarddidhide)
-    - [keyboardWillShow](#keyboardwillshow)
-    - [keyboardWillHide](#keyboardwillhide)
-    - [keyboardHeightWillChange](#keyboardheightwillchange)
-- [Releases](#releases) 
+## Preferences
 
-# Installation
+### KeyboardResizes
 
-From [npm](https://www.npmjs.com/package/cordova-plugin-keyboard) (stable)
+> Boolean (true by default)
 
-`cordova plugin add cordova-plugin-keyboard`
+#### Possible values
+- `true`: Showing/hiding the keyboard will trigger some kind of resizing of the app (see KeyboardResizeMode)
+- `false`: Web will not be resized when the keyboard shows up.
 
-From github latest (may not be stable)
+```xml
+<preference name="KeyboardResizes" value="true" />
+```
 
-`cordova plugin add https://github.com/cjpearson/cordova-plugin-keyboard`
+### KeyboardResizeMode
 
-# Methods
+> String ('native' by default)
 
-## Keyboard.shrinkView
+#### Possible values
 
-Shrink the WebView when the keyboard comes up.
+- `native`: The whole native webview will be resized when the keyboard shows/hides, it will affect the `vh` relative unit.
+- `body`: Only the html `<body>` element will be resized. Relative units are not affected, becuase the viewport does not change.
+- `ionic`: Only the html `ion-app` element will be resized. Only for ionic apps.
 
-    Keyboard.shrinkView(value, successCallback);
-
-#### Description
-
-Set to true to shrink the WebView when the keyboard comes up. The WebView shrinks instead of the viewport shrinking and the page scrollable. This applies to apps that position their elements relative to the bottom of the WebView. This is the default behaviour on Android, and makes a lot of sense when building apps as opposed to webpages.
+```xml
+<preference name="KeyboardResizeMode" value="native" />
+```
 
 
-#### Supported Platforms
+## Methods
 
-- iOS
+### Keyboard.hideFormAccessoryBar
 
-#### Quick Example
-
-    Keyboard.shrinkView(true);
-    Keyboard.shrinkView(false);
-    Keyboard.shrinkView(null, function (currentValue) { console.log(currentValue); });
-
-## Keyboard.hideFormAccessoryBar
-
-Hide the keyboard toolbar.
-
-    Keyboard.hideFormAccessoryBar(value, successCallback);
-
-#### Description
+> Hide the keyboard toolbar.
 
 Set to true to hide the additional toolbar that is on top of the keyboard. This toolbar features the Prev, Next, and Done buttons.
 
+```js
+Keyboard.hideFormAccessoryBar(value, successCallback);
+```
 
-#### Supported Platforms
+##### Quick Example
 
-- iOS
+```js
+Keyboard.hideFormAccessoryBar(true);
+Keyboard.hideFormAccessoryBar(false);
+Keyboard.hideFormAccessoryBar(null, (currentValue) => { console.log(currentValue); });
+```
 
-#### Quick Example
+### Keyboard.hide
 
-    Keyboard.hideFormAccessoryBar(true);
-    Keyboard.hideFormAccessoryBar(false);
-    Keyboard.hideFormAccessoryBar(null, function (currentValue) { console.log(currentValue); });
-
-## Keyboard.disableScrollingInShrinkView
-
-Disable scrolling when the the WebView is shrunk.
-
-    Keyboard.disableScrollingInShrinkView(value, successCallback);
-
-#### Description
-
-Set to true to disable scrolling when the WebView is shrunk.
-
-
-#### Supported Platforms
-
-- iOS
-
-#### Quick Example
-
-    Keyboard.disableScrollingInShrinkView(true);
-    Keyboard.disableScrollingInShrinkView(false);
-    Keyboard.disableScrollingInShrinkView(null, function (currentValue) { console.log(currentValue); });
- 
-## Keyboard.hide
-
-Hide the keyboard
-
-    Keyboard.hide();
-
-#### Description
+> Hide the keyboard
 
 Call this method to hide the keyboard
 
-#### Supported Platforms
+```js
+Keyboard.hide();
+```
 
-- iOS
-- Android
+##### Quick Example
 
-#### Quick Example
+```js
+Keyboard.hide();
+```
 
-    Keyboard.hide();
+### Keyboard.show
 
-## Keyboard.show
-
-Show the keyboard
-
-    Keyboard.show();
-
-#### Description
+> Show the keyboard
 
 Call this method to show the keyboard.
 
+```js
+Keyboard.show();
+```
 
-#### Supported Platforms
+##### Quick Example
 
-- Android
+```js
+Keyboard.show();
+```
 
-#### Quick Example
+## Properties
 
-    Keyboard.show();
+### Keyboard.isVisible
 
-# Properties
-
-## Keyboard.isVisible
-
-Determine if the keyboard is visible.
-
-    if (Keyboard.isVisible) {
-        // do something
-    }
-
-#### Description
+> Determine if the keyboard is visible.
 
 Read this property to determine if the keyboard is visible.
 
+```js
+if (Keyboard.isVisible) {
+    // do something
+}
+```
 
-#### Supported Platforms
+## Events
 
-- iOS
+### keyboardDidHide
 
-## Keyboard.automaticScrollToTopOnHiding
-
-Specifies whenether content of page would be automatically scrolled to the top of the page
-when keyboard is hiding.
-
-    Keyboard.automaticScrollToTopOnHiding = true;
-
-#### Description
-
-Set this to true if you need that page scroll to beginning when keyboard is hiding.
-This is allows to fix issue with elements declared with position: fixed,
-after keyboard is hiding.
-
-
-#### Supported Platforms
-
-- iOS
-
-# Events
-
-## keyboardDidShow
-
-This event is fired when keyboard fully shown.
-
-    window.addEventListener('keyboardDidShow', function () {
-        // Describe your logic which will be run each time keyboard is shown.
-    });
-
-#### Description
-
-Attach handler to this event to be able to receive notification when keyboard is shown.
-
-
-#### Supported Platforms
-
-- iOS
-
-## keyboardDidHide
-
-This event is fired when the keyboard is fully closed.
-
-    window.addEventListener('keyboardDidHide', function () {
-        // Describe your logic which will be run each time keyboard is closed.
-    });
-
-#### Description
+> This event is fired when the keyboard is fully closed.
 
 Attach handler to this event to be able to receive notification when keyboard is closed.
 
+```js
+window.addEventListener('keyboardDidHide', () => {
+    // Describe your logic which will be run each time keyboard is closed.
+});
+```
 
-#### Supported Platforms
+### keyboardDidShow
 
-- iOS
+> This event is fired when the keyboard is fully open.
 
-## keyboardWillShow
+Attach handler to this event to be able to receive notification when keyboard is opened.
 
-This event fires before keyboard will be shown.
+```js
+window.addEventListener('keyboardDidShow', (ev) => {
+    // Describe your logic which will be run each time when keyboard is about to be shown.
+    console.log(event.keyboardHeight);
+});
+```
 
-    window.addEventListener('keyboardWillShow', function () {
-        // Describe your logic which will be run each time when keyboard is about to be shown.
-    });
+### keyboardWillShow
 
-#### Description
+> This event fires before keyboard will be shown.
 
 Attach handler to this event to be able to receive notification when keyboard is about to be shown on the screen.
 
+```js
+window.addEventListener('keyboardWillShow', (ev) => {
+    // Describe your logic which will be run each time when keyboard is about to be shown.
+    console.log(event.keyboardHeight);
+});
+```
 
-#### Supported Platforms
+### keyboardWillHide
 
-- iOS
-
-## keyboardWillHide
-
-This event is fired when the keyboard is fully closed.
-
-    window.addEventListener('keyboardWillHide', function () {
-        // Describe your logic which will be run each time when keyboard is about to be closed.
-    });
-
-#### Description
+> This event is fired when the keyboard is fully closed.
 
 Attach handler to this event to be able to receive notification when keyboard is about to be closed.
 
-
-#### Supported Platforms
-
-- iOS
-
-## keyboardHeightWillChange
-
-This event is fired when the keyboard is fully closed.
-
-    window.addEventListener('keyboardHeightWillChange', function (event) {
-        // Describe your logic which will be run each time when keyboard is about to be closed.
-        console.log(event.keyboardHeight);
-    });
-
-#### Description
-
-Attach handler to this event to be able to receive notification when keyboard is about to be closed.
-
-
-#### Supported Platforms
-
-- iOS
-
-
-# Releases
-
-- 1.0.0 
-    - Initial NPM release
-    - Fix issues with external keyboards
-    - Support keyboard events on window
-    - Fix issues with split and undocked keyboards
-    - Add keyboardHeightWillChange event
-    - Fix issues with StatusBarOverlaysWebview
-- 1.1.0
-    - Add hide/show for Android
-    - Support original keyboard event mechanism
-- 1.1.1
-    - Make compatible with cordova-android 3 and 4 (See [#2](/../../issues/2))
-    - Add hide for iOS
-- 1.1.2
-    - Fix issues with hiding the accessory bar (See [#3](/../../issues/3))
-- 1.1.3
-    - Support hiding the accessory bar when using WKWebView as the engine (See [here](https://github.com/Telerik-Verified-Plugins/WKWebView/issues/85))
-- 1.1.4
-    - Fix page scrolling (See [#14](/../../issues/14))
-    - Prevent possible app store rejections (See [#21](/../../issues/21)) 
-- 1.1.5
-    - Fix window.innerHeight when using WKWebView (See [#32](/../../issues/32))
-
+```js
+window.addEventListener('keyboardWillHide', () => {
+    // Describe your logic which will be run each time when keyboard is about to be closed.
+});
+```
