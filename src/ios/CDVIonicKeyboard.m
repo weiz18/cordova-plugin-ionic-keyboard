@@ -56,15 +56,15 @@ typedef enum : NSUInteger {
     NSLog(@"CDVKeyboard: pluginInitialize");
     NSDictionary *settings = self.commandDelegate.settings;
 
-    self.keyboardResizes = ResizeIonic;
+    self.keyboardResizes = ResizeNative;
     BOOL doesResize = [settings cordovaBoolSettingForKey:@"KeyboardResizes" defaultValue:YES];
     if (!doesResize) {
         self.keyboardResizes = ResizeNone;
     } else {
         NSString *resizeMode = [settings cordovaSettingForKey:@"KeyboardResizesMode"];
         if (resizeMode) {
-            if ([resizeMode isEqualToString:@"native"]) {
-                self.keyboardResizes = ResizeNative;
+            if ([resizeMode isEqualToString:@"ionic"]) {
+                self.keyboardResizes = ResizeIonic;
             } else if ([resizeMode isEqualToString:@"body"]) {
                 self.keyboardResizes = ResizeBody;
             }
