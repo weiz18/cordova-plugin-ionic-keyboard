@@ -53,13 +53,14 @@ typedef enum : NSUInteger {
 
 - (void)pluginInitialize
 {
-    NSLog(@"CDVKeyboard: pluginInitialize");
     NSDictionary *settings = self.commandDelegate.settings;
 
     self.keyboardResizes = ResizeNative;
     BOOL doesResize = [settings cordovaBoolSettingForKey:@"KeyboardResize" defaultValue:YES];
     if (!doesResize) {
         self.keyboardResizes = ResizeNone;
+        NSLog(@"CDVIonicKeyboard: no resize");
+
     } else {
         NSString *resizeMode = [settings cordovaSettingForKey:@"KeyboardResizeMode"];
         if (resizeMode) {
@@ -69,6 +70,7 @@ typedef enum : NSUInteger {
                 self.keyboardResizes = ResizeBody;
             }
         }
+        NSLog(@"CDVIonicKeyboard: resize mode %d", self.keyboardResizes);
     }
     self.hideFormAccessoryBar = [settings cordovaBoolSettingForKey:@"HideKeyboardFormAccessoryBar" defaultValue:YES];
 
@@ -82,7 +84,7 @@ typedef enum : NSUInteger {
     // Prevent WKWebView to resize window
     BOOL isWK = self.isWK = [self.webView isKindOfClass:NSClassFromString(@"WKWebView")];
     if (!isWK) {
-        NSLog(@"CDVKeyboard: WARNING!!: Keyboard plugin works better with WK");
+        NSLog(@"CDVIonicKeyboard: WARNING!!: Keyboard plugin works better with WK");
     }
 
     if (isWK) {
@@ -104,7 +106,6 @@ typedef enum : NSUInteger {
 
 - (void)onKeyboardWillHide:(NSNotification *)sender
 {
-    NSLog(@"CDVKeyboard: onKeyboardWillHide");
     if (self.isWK) {
         [self setKeyboardHeight:0 delay:0.01];
         [self resetScrollView];
@@ -114,7 +115,6 @@ typedef enum : NSUInteger {
 
 - (void)onKeyboardWillShow:(NSNotification *)note
 {
-    NSLog(@"CDVKeyboard: onKeyboardWillShow");
     CGRect rect = [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
     double height = rect.size.height;
 
@@ -130,7 +130,6 @@ typedef enum : NSUInteger {
 
 - (void)onKeyboardDidShow:(NSNotification *)note
 {
-    NSLog(@"CDVKeyboard: onKeyboardDidShow");
     CGRect rect = [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
     double height = rect.size.height;
 
@@ -144,7 +143,6 @@ typedef enum : NSUInteger {
 
 - (void)onKeyboardDidHide:(NSNotification *)sender
 {
-    NSLog(@"CDVKeyboard: onKeyboardDidHide");
     [self.commandDelegate evalJs:@"Keyboard.fireOnHide();"];
     [self resetScrollView];
 }
@@ -176,7 +174,7 @@ typedef enum : NSUInteger {
 
 - (void)_updateFrame
 {
-    NSLog(@"CDVKeyboard: updating WK frame");
+    NSLog(@"CDVIonicKeyboard: updating frame");
     CGRect f = [[UIScreen mainScreen] bounds];
     switch (self.keyboardResizes) {
         case ResizeBody:
