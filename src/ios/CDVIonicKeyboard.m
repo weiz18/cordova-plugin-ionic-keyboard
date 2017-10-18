@@ -57,11 +57,11 @@ typedef enum : NSUInteger {
     NSDictionary *settings = self.commandDelegate.settings;
 
     self.keyboardResizes = ResizeNative;
-    BOOL doesResize = [settings cordovaBoolSettingForKey:@"KeyboardResizes" defaultValue:YES];
+    BOOL doesResize = [settings cordovaBoolSettingForKey:@"KeyboardResize" defaultValue:YES];
     if (!doesResize) {
         self.keyboardResizes = ResizeNone;
     } else {
-        NSString *resizeMode = [settings cordovaSettingForKey:@"KeyboardResizesMode"];
+        NSString *resizeMode = [settings cordovaSettingForKey:@"KeyboardResizeMode"];
         if (resizeMode) {
             if ([resizeMode isEqualToString:@"ionic"]) {
                 self.keyboardResizes = ResizeIonic;

@@ -13,7 +13,7 @@ cordova plugin add cordova-plugin-ionic-keyboard --save
 
 ## Preferences
 
-### KeyboardResizes
+### KeyboardResize
 
 > Boolean (true by default)
 
@@ -22,7 +22,7 @@ cordova plugin add cordova-plugin-ionic-keyboard --save
 - `false`: Web will not be resized when the keyboard shows up.
 
 ```xml
-<preference name="KeyboardResizes" value="true" />
+<preference name="KeyboardResize" value="true" />
 ```
 
 ### KeyboardResizeMode
