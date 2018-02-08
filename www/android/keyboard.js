@@ -28,7 +28,7 @@ Keyboard.fireOnShowing = function (height) {
     });
 };
 
-Keyboard.hideKeyboardAccessoryBar = function (hide) {
+Keyboard.hideFormAccessoryBar = Keyboard.hideKeyboardAccessoryBar = function (hide) {
     exec(null, null, "Keyboard", "hideKeyboardAccessoryBar", [hide]);
 };
 
