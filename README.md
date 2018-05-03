@@ -116,7 +116,7 @@ window.addEventListener('keyboardDidHide', () => {
 Attach handler to this event to be able to receive notification when keyboard is opened.
 
 ```js
-window.addEventListener('keyboardDidShow', (ev) => {
+window.addEventListener('keyboardDidShow', (event) => {
     // Describe your logic which will be run each time when keyboard is about to be shown.
     console.log(event.keyboardHeight);
 });
@@ -129,7 +129,7 @@ window.addEventListener('keyboardDidShow', (ev) => {
 Attach handler to this event to be able to receive notification when keyboard is about to be shown on the screen.
 
 ```js
-window.addEventListener('keyboardWillShow', (ev) => {
+window.addEventListener('keyboardWillShow', (event) => {
     // Describe your logic which will be run each time when keyboard is about to be shown.
     console.log(event.keyboardHeight);
 });
