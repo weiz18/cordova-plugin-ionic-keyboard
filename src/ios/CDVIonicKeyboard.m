@@ -278,6 +278,20 @@ static IMP WKOriginalImp;
     [self.webView endEditing:YES];
 }
 
+-(void)setResizeMode:(CDVInvokedUrlCommand *)command
+{
+    NSString * mode = [command.arguments objectAtIndex:0];
+    if ([mode isEqualToString:@"ionic"]) {
+        self.keyboardResizes = ResizeIonic;
+    } else if ([mode isEqualToString:@"body"]) {
+        self.keyboardResizes = ResizeBody;
+    } else if ([mode isEqualToString:@"native"]) {
+        self.keyboardResizes = ResizeNative;
+    } else {
+        self.keyboardResizes = ResizeNone;
+    }
+}
+
 
 #pragma mark dealloc
 
