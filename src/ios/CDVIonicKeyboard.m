@@ -44,6 +44,8 @@ typedef enum : NSUInteger {
 
 @implementation CDVIonicKeyboard
 
+NSTimer *hideTimer;
+
 - (id)settingForKey:(NSString *)key
 {
     return [self.commandDelegate.settings objectForKey:[key lowercaseString]];
@@ -117,11 +119,18 @@ typedef enum : NSUInteger {
         [self setKeyboardHeight:0 delay:0.01];
         [self resetScrollView];
     }
+    hideTimer = [NSTimer scheduledTimerWithTimeInterval:0 target:self selector:@selector(fireOnHiding) userInfo:nil repeats:NO];
+}
+
+- (void)fireOnHiding {
     [self.commandDelegate evalJs:@"Keyboard.fireOnHiding();"];
 }
 
 - (void)onKeyboardWillShow:(NSNotification *)note
 {
+    if (hideTimer != nil) {
+        [hideTimer invalidate];
+    }
     CGRect rect = [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
     double height = rect.size.height;
 
