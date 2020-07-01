@@ -49,6 +49,14 @@ Keyboard.show = function () {
     exec(null, null, "CDVIonicKeyboard", "show", []);
 };
 
+Keyboard.disableKeyboard = function () {
+    exec(null, null, "CDVIonicKeyboard", "disableKeyboard", []);
+};
+
+Keyboard.enableKeyboard = function () {
+    exec(null, null, "CDVIonicKeyboard", "enableKeyboard", []);
+};
+
 Keyboard.disableScroll = function (disable) {
     console.warn("Keyboard.disableScroll() not supported in Android");
 };

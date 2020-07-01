@@ -86,6 +86,14 @@ Keyboard.show = function () {
     console.warn('    <preference name="KeyboardDisplayRequiresUserAction" value="false"/>\n');
 };
 
+Keyboard.disableKeyboard = function (disable) {
+    console.warn('disable keyboard not supported in iOS due to platform limitations.');
+};
+
+Keyboard.enableKeyboard = function (disable) {
+    console.warn('enable keyboard not supported in iOS due to platform limitations.');
+};
+
 Keyboard.disableScroll = function (disable) {
     exec(null, null, "CDVIonicKeyboard", "disableScroll", [disable]);
 };

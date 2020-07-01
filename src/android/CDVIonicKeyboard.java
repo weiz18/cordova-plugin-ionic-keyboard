@@ -13,6 +13,7 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.inputmethod.InputMethodManager;
@@ -61,6 +62,31 @@ public class CDVIonicKeyboard extends CordovaPlugin {
             });
             return true;
         }
+
+        if ("disableKeyboard".equals(action)) { 
+            Activity activity = cordova.getActivity();
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+                    callbackContext.success(); // Thread-safe.
+                }
+            });
+            return true;
+        }
+
+        if ("enableKeyboard".equals(action)) { 
+            Activity activity = cordova.getActivity();
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+                    callbackContext.success(); // Thread-safe.
+                }
+            });
+            return true;
+        }
+
         if ("init".equals(action)) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
