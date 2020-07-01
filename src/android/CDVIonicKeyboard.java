@@ -9,6 +9,7 @@ import org.apache.cordova.PluginResult.Status;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
 import android.util.DisplayMetrics;
